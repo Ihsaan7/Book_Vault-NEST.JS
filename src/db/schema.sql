@@ -3,7 +3,7 @@ PRAGMA foreign_keys = ON;
 -- USER TABLE
 CREATE TABLE IF NOT EXISTS users(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL ,
+    name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role TEXT DEFAULT 'USER' CHECK(role IN('USER','ADMIN')),
@@ -15,13 +15,13 @@ CREATE TABLE IF NOT EXISTS books(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     author TEXT NOT NULL,
-    category TEXT NOT NULL CHECK(category IN('FICTION', 'NON_FICTION', 'SCI_FI', 'BIOGRAPHY', 'MYSTERY', 'FANTASY'))
+    category TEXT NOT NULL CHECK(category IN('FICTION','NON_FICTION','SCI_FI','BIOGRAPHY','MYSTERY','FANTASY')),
     description TEXT,
     isbn TEXT UNIQUE NOT NULL,
     is_available INTEGER DEFAULT 1,
-    added_by INTEGER NOT NULL,
+    added_by INTEGER, -- allow NULL if you want ON DELETE SET NULL
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (added_by) REFRENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (added_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- BORROWS TABLE
@@ -31,9 +31,9 @@ CREATE TABLE IF NOT EXISTS borrows(
     returned_at TEXT,
     user_id INTEGER NOT NULL,
     book_id INTEGER NOT NULL,
-    status TEXT DEFAULT 'BORROWED' CHECK(status IN ('BORROWED' , 'RETURNED')),
-    FOREIGN KEY (user_id) REFRENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (book_id) REFRENCES books(id) ON DELETE CASCADE
+    status TEXT DEFAULT 'BORROWED' CHECK(status IN('BORROWED','RETURNED')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
 );
 
 -- REVIEWS TABLE
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS reviews(
     comment TEXT,
     user_id INTEGER NOT NULL,
     book_id INTEGER NOT NULL,
-    FOREIGN KEY (user_id) REFRENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (book_id) REFRENCES books(id) ON DELETE CASCADE,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+);
