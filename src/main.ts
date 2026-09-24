@@ -1,7 +1,10 @@
+import "./instrument.js";
+
+// All other imports below
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { ValidationPipe } from '@nestjs/common';
-import { AllExceptionFilter } from './common/filters/allExceptions.filter.js';
+import { AllExceptionFilter } from './common/filters/allExceptions.filter.js';;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
