@@ -6,9 +6,9 @@ import {
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { DatabaseService } from '../db/database.service.js';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { Role } from '../common/enums/role.enum';
+import { RegisterDto } from './dto/register.dto.js';
+import { LoginDto } from './dto/login.dto.js';
+import { Role } from '../common/enums/role.enum.js';
 
 @Injectable()
 export class AuthService{
@@ -31,7 +31,7 @@ export class AuthService{
             `INSERT INTO users(name , email , password_hash , role)
                 VALUES (? , ? , ? , ?)
             `,
-            [dto.name , dto.email ,  dto.passwordHash , dto.role || Role.USER]
+            [dto.name , dto.email ,  dto.password , dto.role || Role.USER]
         )
 
         return{
@@ -64,8 +64,8 @@ export class AuthService{
         // Generate JWT token
         const token = jwt.sign(
             { id: user.id , emial: user.email, role:user.role},
-            process.env.JWT_SECRET_KEY,
-            {expiresIn: process.env.JWT_SECRET_EXPIRES}
+            process.env.JWT_SECRET_KEY || 'fallback_secret_key_for_development',
+            {expiresIn: process.env.JWT_SECRET_EXPIRES || '1h'}
         );
 
         return{
