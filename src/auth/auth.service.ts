@@ -3,103 +3,94 @@ import {
     ConflictException,
     UnauthorizedException,
 } from '@nestjs/common';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcryptjs';
+import * as jwt from 'jsonwebtoken';
 import { DatabaseService } from '../db/database.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { Role } from '../common/enums/role.enum.js';
 
 @Injectable()
-export class AuthService{
-    constructor(private readonly db: DatabaseService){}
+export class AuthService {
+    constructor(private readonly db: DatabaseService) {}
 
-    //------------------ Register a user
-    async register(dto: RegisterDto){
-        // Check for existing mail
+    async register(dto: RegisterDto) {
         const existing = await this.db.get(
             `SELECT id FROM users WHERE email = ?`,
             [dto.email],
         );
-        if(existing){ throw new ConflictException('Email already registered!')}
+        if (existing) {
+            throw new ConflictException('Email already registered!');
+        }
 
-        // Hash pass
-        const passwordHash = await bcrypt.hash(dto.password , 10)
+        const passwordHash = await bcrypt.hash(dto.password, 10);
 
-        // Insert user into DB
         const result = await this.db.run(
-            `INSERT INTO users(name , email , password_hash , role)
-                VALUES (? , ? , ? , ?)
-            `,
-            [dto.name , dto.email ,  dto.password , dto.role || Role.USER]
-        )
+            `INSERT INTO users(name, email, password_hash, role)
+                VALUES (?, ?, ?, ?)`,
+            [dto.name, dto.email, passwordHash, dto.role || Role.USER]
+            //                 ^^^^^^^^^^^ Fix: use passwordHash
+        );
 
-        return{
+        return {
             success: true,
-            message:"User registered succesfully",
-            data:{
+            message: 'User registered successfully',
+            data: {
                 id: result.lastID,
                 name: dto.name,
                 email: dto.email,
-                role: dto.role || Role.USER
-            }
-        }
+                role: dto.role || Role.USER,
+            },
+        };
     }
 
-
-    //----------------- LOGIN USER
-    async login(dto: LoginDto){
-        // Find user by email
+    async login(dto: LoginDto) {
         const user = await this.db.get(
-            `SELECT id , name , email , password_hash , role
+            `SELECT id, name, email, password_hash, role
                 FROM users WHERE email = ?`,
             [dto.email]
         );
-        if(!user){ throw new UnauthorizedException("Invalid credentials!")}
+        if (!user) {
+            throw new UnauthorizedException('Invalid credentials!');
+        }
 
-        // Compare pass
-        const isPassValid = await bcrypt.compare(dto.password , user.password_hash)
-        if(!isPassValid){ throw new UnauthorizedException("Invalid credentials!")}
+        const isPassValid = await bcrypt.compare(dto.password, user.password_hash);
+        if (!isPassValid) {
+            throw new UnauthorizedException('Invalid credentials!');
+        }
 
-        // Generate JWT token
         const token = jwt.sign(
-            { id: user.id , emai: user.email, role:user.role},
-            process.env.JWT_SECRET_KEY || 'fallback_secret_key_for_development',
-            {expiresIn: process.env.JWT_SECRET_EXPIRES || '1h'}
+            { id: user.id, email: user.email, role: user.role },
+            //         ^^^^^ Fix: typo
+            process.env.JWT_SECRET || 'fallback_secret_key',
+            { expiresIn: '7d' }
         );
 
-        return{
+        return {
             success: true,
-            message: "Login successfull",
-            data:{
+            message: 'Login successful',
+            data: {
                 token,
-                user:{
-                    id:user.id,
+                user: {
+                    id: user.id,
                     email: user.email,
-                    role: user.role
-                }
-            }
-        }
+                    role: user.role,
+                },
+            },
+        };
     }
 
-
-    //------------------ GET CURRENT USER
-    async getProfile(userId: number){
+    async getProfile(userId: number) {
         const user = await this.db.get(
-            `SELECT id , name , role , created_at FROM users WHERE id =  ?`,
+            `SELECT id, name, role, created_at FROM users WHERE id = ?`,
             [userId],
-        )
-        if(!user){ throw new UnauthorizedException("User not found!")}
-        return{
-            success: true,
-            data: user
+        );
+        if (!user) {
+            throw new UnauthorizedException('User not found!');
         }
+        return {
+            success: true,
+            data: user,
+        };
     }
-
-
-
-
-
-
-
 }
