@@ -63,7 +63,7 @@ export class AuthService{
 
         // Generate JWT token
         const token = jwt.sign(
-            { id: user.id , emial: user.email, role:user.role},
+            { id: user.id , emai: user.email, role:user.role},
             process.env.JWT_SECRET_KEY || 'fallback_secret_key_for_development',
             {expiresIn: process.env.JWT_SECRET_EXPIRES || '1h'}
         );
