@@ -7,9 +7,10 @@ import { AuthModule } from './auth/auth.module.js';
 import { BorrowModule } from './borrows/borrow.module.js';
 import { BookModule } from './books/book.module.js';
 import { ReviewModule } from './reviews/review.module.js';
+import { UserModule } from './users/user.module.js';
 
 @Module({
-  imports: [DatabaseModule , AuthModule , BorrowModule , BookModule , ReviewModule],
+  imports: [DatabaseModule , AuthModule , BorrowModule , BookModule , ReviewModule , UserModule],
   controllers: [AppController],
   providers: [AppService , DatabaseService],
   exports: [DatabaseService]
