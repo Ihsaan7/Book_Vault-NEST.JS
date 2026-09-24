@@ -4,7 +4,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { DatabaseService } from '../db/database.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -29,7 +29,7 @@ export class AuthService {
             `INSERT INTO users(name, email, password_hash, role)
                 VALUES (?, ?, ?, ?)`,
             [dto.name, dto.email, passwordHash, dto.role || Role.USER]
-            //                 ^^^^^^^^^^^ Fix: use passwordHash
+            
         );
 
         return {
@@ -59,12 +59,18 @@ export class AuthService {
             throw new UnauthorizedException('Invalid credentials!');
         }
 
-        const token = jwt.sign(
-            { id: user.id, email: user.email, role: user.role },
-            //         ^^^^^ Fix: typo
-            process.env.JWT_SECRET || 'fallback_secret_key',
-            { expiresIn: '7d' }
-        );
+        let token;
+        try {
+            token = jwt.sign(
+                { id: user.id, email: user.email, role: user.role },
+               
+                process.env.JWT_SECRET || 'fallback_secret_key',
+                { expiresIn: '7d' }
+            );
+        } catch (error) {
+            console.error('Error signing JWT:', error);
+            throw new UnauthorizedException('Failed to generate authentication token.');
+        }
 
         return {
             success: true,
